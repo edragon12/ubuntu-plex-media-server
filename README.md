@@ -15,13 +15,30 @@ Build your own **self-hosted media server on Ubuntu** with **Plex, Radarr, Sonar
 
 Replace `SERVER_IP` with the LAN IP of **your** Ubuntu server. Keep management interfaces private; do not forward these ports directly to the internet.
 
-## Requirements
+## Prerequisites — what you need before starting
 
-- An Ubuntu machine (a spare PC, mini PC, or server).
-- An administrator account with `sudo` access.
-- Storage for movies, TV shows, and downloads.
-- Docker Engine and the Docker Compose plugin.
-- Your own legitimate media and any accounts/services you choose to configure.
+### Hardware and software
+
+- **Ubuntu server:** A spare PC, mini PC, or server running a supported Ubuntu release, with an administrator account that can use `sudo`.
+- **Storage:** Enough free space for your movies, TV shows, application settings, and downloads. You should know where your drives or network shares are mounted.
+- **Network:** A reliable home network connection and your server's local IP address. Internet access is needed to download container images and complete initial setup.
+- **Docker Engine and Docker Compose:** You will install these in Step 1 using the [official Docker Ubuntu guide](https://docs.docker.com/engine/install/ubuntu/).
+- **Git (recommended):** Helpful for cloning this repository; alternatively, download the Compose file manually.
+
+### Accounts and applications
+
+| Service | Do you need an account? | What to prepare |
+| --- | --- | --- |
+| **[Plex](https://www.plex.tv/)** | **Yes, recommended for setup and claiming your server.** | Create a free Plex account before starting. Some Plex features may require a paid Plex Pass. |
+| **[Radarr](https://radarr.video/)** | **No separate Radarr account required.** | The Radarr container is installed by Docker Compose; configure it through its local web interface. |
+| **[Sonarr](https://sonarr.tv/)** | **No separate Sonarr account required.** | The Sonarr container is installed by Docker Compose; configure it through its local web interface. |
+| **[SABnzbd](https://sabnzbd.org/)** | **No SABnzbd account required.** | SABnzbd is installed by Docker Compose. To download from Usenet, you need your own **Usenet provider account** and its server credentials. |
+| **Indexers** | **Depends on the service.** | Radarr and Sonarr can use compatible indexers you configure; any registration, API key, or subscription depends on the provider. |
+| **[Portainer](https://www.portainer.io/)** | **Optional.** | Portainer provides a graphical Docker management interface. It runs separately on the original server and is **not** included in this Compose stack. |
+
+**You do not need to install Plex, Radarr, Sonarr, or SABnzbd individually.** Docker Compose downloads and runs their containers. You'll configure each app after the stack starts.
+
+**Before proceeding:** Have your Plex login available, know your storage locations, and—if you plan to use SABnzbd for downloads—have your own Usenet provider details ready. Do not put passwords or API keys in this public repository.
 
 The example uses `PUID=1000`, `PGID=1000`, and `TZ=America/Chicago`. Verify your own values before deploying.
 
