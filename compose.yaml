@@ -1,0 +1,71 @@
+# Verified DragonCorp deployment configuration, supplied October 16, 2026.
+# Review host paths and restart policy before deploying on another machine.
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+      - VERSION=docker
+    volumes:
+      - ./plex:/config
+      - type: bind
+        source: /mnt/media/movies/Media/Movies
+        target: /movies
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /mnt/media/tv/Media/TV Shows
+        target: /tv
+        read_only: true
+        bind:
+          create_host_path: false
+    restart: "no"
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    ports:
+      - "7878:7878"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - ./radarr:/config
+      - /mnt/media/movies/Media/Movies:/movies
+      - /srv/data/downloads:/downloads
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    ports:
+      - "8989:8989"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - ./sonarr:/config
+      - /mnt/media/tv/Media/TV Shows:/tv
+      - /srv/data/downloads:/downloads
+    restart: unless-stopped
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    ports:
+      - "8080:8080"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    volumes:
+      - ./sabnzbd:/config
+      - /srv/data/downloads:/downloads
+    restart: unless-stopped
