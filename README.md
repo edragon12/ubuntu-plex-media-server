@@ -25,20 +25,23 @@ Replace `SERVER_IP` with the LAN IP of **your** Ubuntu server. Keep management i
 - **Docker Engine and Docker Compose:** You will install these in Step 1 using the [official Docker Ubuntu guide](https://docs.docker.com/engine/install/ubuntu/).
 - **Git (recommended):** Helpful for cloning this repository; alternatively, download the Compose file manually.
 
-### Accounts and applications
+### Accounts, services, and initial setup
 
-| Service | Do you need an account? | What to prepare |
-| --- | --- | --- |
-| **[Plex](https://www.plex.tv/)** | **Yes, recommended for setup and claiming your server.** | Create a free Plex account before starting. Some Plex features may require a paid Plex Pass. |
-| **[Radarr](https://radarr.video/)** | **No separate Radarr account required.** | The Radarr container is installed by Docker Compose; configure it through its local web interface. |
-| **[Sonarr](https://sonarr.tv/)** | **No separate Sonarr account required.** | The Sonarr container is installed by Docker Compose; configure it through its local web interface. |
-| **[SABnzbd](https://sabnzbd.org/)** | **No SABnzbd account required.** | SABnzbd is installed by Docker Compose. To download from Usenet, you need your own **Usenet provider account** and its server credentials. |
-| **Indexers** | **Depends on the service.** | Radarr and Sonarr can use compatible indexers you configure; any registration, API key, or subscription depends on the provider. |
-| **[Portainer](https://www.portainer.io/)** | **Optional.** | Portainer provides a graphical Docker management interface. It runs separately on the original server and is **not** included in this Compose stack. |
+To get the **complete media-management workflow** working, you'll need to set up all four applications plus a compatible download source. The applications run on your own server; they do **not** all require separate accounts on their official websites.
 
-**You do not need to install Plex, Radarr, Sonarr, or SABnzbd individually.** Docker Compose downloads and runs their containers. You'll configure each app after the stack starts.
+| Application or service | What you need before the system is fully functional |
+| --- | --- |
+| **[Plex](https://www.plex.tv/)** | Create a Plex account to sign in and claim/configure your Plex server. A free account is sufficient to get started; certain features may require a paid plan. |
+| **[Radarr](https://radarr.video/)** | Install and configure the Radarr container, movie root folder, download client, and any compatible indexers. **No Radarr website account is required.** |
+| **[Sonarr](https://sonarr.tv/)** | Install and configure the Sonarr container, TV root folder, download client, and any compatible indexers. **No Sonarr website account is required.** |
+| **[SABnzbd](https://sabnzbd.org/)** | Install and configure the SABnzbd container and connect it to your Usenet provider. **No SABnzbd website account is required.** |
+| **Usenet provider** | **An account with a Usenet provider** is required if you want SABnzbd to download from Usenet. Have its server address, port, username/password, and SSL settings ready. This may require a paid subscription. |
+| **Indexers** | Set up compatible indexers for Radarr and Sonarr. Depending on the indexer, registration, an API key, or a subscription may be required. |
+| **[Portainer](https://www.portainer.io/)** | Optional graphical Docker management. The original server uses Portainer separately; this repository does not deploy it. |
 
-**Before proceeding:** Have your Plex login available, know your storage locations, and—if you plan to use SABnzbd for downloads—have your own Usenet provider details ready. Do not put passwords or API keys in this public repository.
+**Important:** Docker Compose installs and starts the Plex, Radarr, Sonarr, and SABnzbd **containers**, but you must still open their web interfaces and complete each application's setup. You do not need to register a separate online account with Radarr, Sonarr, or SABnzbd.
+
+**Before proceeding:** Create your Plex account, identify your storage folders, and have your Usenet provider credentials and any indexer details ready if you plan to use those services. Never commit passwords or API keys to GitHub.
 
 The example uses `PUID=1000`, `PGID=1000`, and `TZ=America/Chicago`. Verify your own values before deploying.
 
