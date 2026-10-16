@@ -1,4 +1,4 @@
-# Plex Ubuntu Media Server
+# ubuntu-plex-media-server
 
 A documented Docker Compose setup for **Plex**, **Radarr**, **Sonarr**, and **SABnzbd** on Ubuntu. The Compose file in this repository reproduces the configuration supplied from a working DragonCorp server on October 16, 2026. **Portainer is also installed on that server but is managed separately; its deployment configuration is not included here.**
 
