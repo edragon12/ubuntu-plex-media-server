@@ -1,0 +1,29 @@
+# Local app configuration (contains databases and possibly secrets)
+/plex/
+/radarr/
+/sonarr/
+/sabnzbd/
+
+# Secrets and local overrides
+.env
+.env.*
+!.env.example
+compose.override.yaml
+docker-compose.override.yml
+*.key
+*.pem
+*.p12
+*.db
+*.sqlite
+*.sqlite3
+
+# Media and downloads if copied into the repo
+/downloads/
+/movies/
+/tv/
+/media/
+
+# Editor/system files
+.DS_Store
+*.swp
+*~
