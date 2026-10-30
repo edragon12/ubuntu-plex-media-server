@@ -6,36 +6,61 @@ Build your own **self-hosted media server on Ubuntu** with **Plex, Radarr, Sonar
 
 ## Architecture
 
-Docker Compose runs Plex, Radarr, Sonarr, and SABnzbd on the Ubuntu host. Movies, TV, and downloads are shared host folders. Radarr and Sonarr send download jobs to SABnzbd on the Compose network. Plex uses the host network and reads the libraries after they are imported.
+Numbered arrows follow a movie or episode from the request through download, import, and playback. Blue nodes are the Compose apps, green cylinders are shared host folders, and dashed orange nodes are outside this Compose file.
 
 ```mermaid
-flowchart TB
+flowchart LR
+  user{{"User<br/>external"}}
+  indexers{{"Indexers<br/>external"}}
+  usenet{{"Usenet provider<br/>external"}}
+
   subgraph host ["Ubuntu host"]
-    direction TB
-    subgraph compose ["Docker Compose"]
-      direction LR
-      sabnzbd["SABnzbd<br/>port 8080"]
-      radarr["Radarr<br/>port 7878"]
-      sonarr["Sonarr<br/>port 8989"]
-      plex["Plex<br/>host network, port 32400"]
-      radarr -.->|"download client, sabnzbd:8080"| sabnzbd
-      sonarr -.->|"download client, sabnzbd:8080"| sabnzbd
+    direction LR
+    subgraph net ["Docker Compose network"]
+      direction TB
+      radarr("Radarr<br/>port 7878")
+      sonarr("Sonarr<br/>port 8989")
+      sabnzbd("SABnzbd<br/>port 8080")
     end
 
     subgraph storage ["Shared host folders"]
-      direction LR
-      downloads[("Downloads<br/>/srv/data/downloads → /downloads<br/>SABnzbd writes<br/>Radarr and Sonarr read")]
-      movies[("Movies<br/>/mnt/media/movies/Media/Movies → /movies<br/>Radarr writes<br/>Plex reads, read-only")]
-      tv[("TV shows<br/>/mnt/media/tv/Media/TV Shows → /tv<br/>Sonarr writes<br/>Plex reads, read-only")]
+      direction TB
+      movies[("Movies<br/>/mnt/media/movies/Media/Movies<br/>→ /movies")]
+      tv[("TV shows<br/>/mnt/media/tv/Media/TV Shows<br/>→ /tv")]
+      downloads[("Downloads<br/>/srv/data/downloads<br/>→ /downloads")]
     end
 
-    sabnzbd ~~~ downloads
-    radarr ~~~ movies
-    sonarr ~~~ tv
+    plex("Plex<br/>host network<br/>port 32400")
   end
+
+  clients{{"TV, phone, browser<br/>external"}}
+
+  user -->|"1) Request a movie"| radarr
+  user -->|"1) Request a show"| sonarr
+  radarr -->|"2) Search indexers"| indexers
+  sonarr -->|"2) Search indexers"| indexers
+  radarr -->|"2) Send NZB, sabnzbd:8080 API"| sabnzbd
+  sonarr -->|"2) Send NZB, sabnzbd:8080 API"| sabnzbd
+  usenet -->|"3) Download from Usenet"| sabnzbd
+  sabnzbd -->|"3) Write completed files to /downloads"| downloads
+  radarr -->|"4) Import from /downloads into /movies"| movies
+  sonarr -->|"4) Import from /downloads into /tv"| tv
+  movies -->|"5) Plex scans the read-only library"| plex
+  tv -->|"5) Plex scans the read-only library"| plex
+  plex -->|"6) Stream to clients on port 32400"| clients
+
+  classDef app fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a,stroke-width:2px
+  classDef folder fill:#dcfce7,stroke:#166534,color:#14532d,stroke-width:2px
+  classDef external fill:#ffedd5,stroke:#c2410c,color:#9a3412,stroke-width:2px,stroke-dasharray: 5 3
+  class radarr,sonarr,sabnzbd,plex app
+  class movies,tv,downloads folder
+  class user,indexers,usenet,clients external
+  style host fill:#f8fafc,stroke:#334155,stroke-width:2px
+  style net fill:#eff6ff,stroke:#2563eb
+  style storage fill:#f0fdf4,stroke:#16a34a
 ```
 
-Plex mounts `/movies` and `/tv` read-only. Radarr writes `/movies`, Sonarr writes `/tv`, and Radarr, Sonarr, and SABnzbd all mount `/srv/data/downloads` at `/downloads`. Each container also keeps its own config directory (`./plex`, `./radarr`, `./sonarr`, `./sabnzbd`).
+Plex uses the host network (`network_mode: host`) and reads `/movies` and `/tv` read-only. Radarr, Sonarr, and SABnzbd share Docker's default Compose network, where Radarr and Sonarr reach SABnzbd at `sabnzbd` port `8080`. Radarr writes `/movies`, Sonarr writes `/tv`, and all three mount `/srv/data/downloads` at `/downloads`. Each app keeps its own config directory (`./plex`, `./radarr`, `./sonarr`, `./sabnzbd`).
 
 ## What each application does
 
