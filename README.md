@@ -4,71 +4,6 @@ Build your own **self-hosted media server on Ubuntu** with **Plex, Radarr, Sonar
 
 > **Before you begin:** This is a documented working configuration, **not** a one-click installer. You must adapt storage paths, permissions, and application settings to your server. Portainer is installed separately on the original server and is not included in this Compose file.
 
-## Architecture
-
-![Animated request-to-playback flow. Steps light up in order: a Radarr or Sonarr request, an indexer search and the SABnzbd API, the Usenet download into /downloads, import into the movie and TV folders, a Plex library scan, and streaming to clients on port 32400.](docs/architecture-flow.gif)
-
-Numbered arrows follow a movie or episode from the request through download, import, and playback. Blue nodes are the Compose apps, green cylinders are shared host folders, and dashed orange nodes are outside this Compose file.
-
-<details>
-<summary>Static Mermaid version</summary>
-
-```mermaid
-flowchart LR
-  user{{"User<br/>external"}}
-  indexers{{"Indexers<br/>external"}}
-  usenet{{"Usenet provider<br/>external"}}
-
-  subgraph host ["Ubuntu host"]
-    direction LR
-    subgraph net ["Docker Compose network"]
-      direction TB
-      radarr("Radarr<br/>port 7878")
-      sonarr("Sonarr<br/>port 8989")
-      sabnzbd("SABnzbd<br/>port 8080")
-    end
-
-    subgraph storage ["Shared host folders"]
-      direction TB
-      movies[("Movies<br/>/mnt/media/movies/Media/Movies<br/>→ /movies")]
-      tv[("TV shows<br/>/mnt/media/tv/Media/TV Shows<br/>→ /tv")]
-      downloads[("Downloads<br/>/srv/data/downloads<br/>→ /downloads")]
-    end
-
-    plex("Plex<br/>host network<br/>port 32400")
-  end
-
-  clients{{"TV, phone, browser<br/>external"}}
-
-  user -->|"1) Request a movie"| radarr
-  user -->|"1) Request a show"| sonarr
-  radarr -->|"2) Search indexers"| indexers
-  sonarr -->|"2) Search indexers"| indexers
-  radarr -->|"2) Send NZB, sabnzbd:8080 API"| sabnzbd
-  sonarr -->|"2) Send NZB, sabnzbd:8080 API"| sabnzbd
-  usenet -->|"3) Download from Usenet"| sabnzbd
-  sabnzbd -->|"3) Write completed files to /downloads"| downloads
-  radarr -->|"4) Import from /downloads into /movies"| movies
-  sonarr -->|"4) Import from /downloads into /tv"| tv
-  movies -->|"5) Plex scans the read-only library"| plex
-  tv -->|"5) Plex scans the read-only library"| plex
-  plex -->|"6) Stream to clients on port 32400"| clients
-
-  classDef app fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a,stroke-width:2px
-  classDef folder fill:#dcfce7,stroke:#166534,color:#14532d,stroke-width:2px
-  classDef external fill:#ffedd5,stroke:#c2410c,color:#9a3412,stroke-width:2px,stroke-dasharray: 5 3
-  class radarr,sonarr,sabnzbd,plex app
-  class movies,tv,downloads folder
-  class user,indexers,usenet,clients external
-  style host fill:#f8fafc,stroke:#334155,stroke-width:2px
-  style net fill:#eff6ff,stroke:#2563eb
-  style storage fill:#f0fdf4,stroke:#16a34a
-```
-
-</details>
-
-Plex uses the host network (`network_mode: host`) and reads `/movies` and `/tv` read-only. Radarr, Sonarr, and SABnzbd share Docker's default Compose network, where Radarr and Sonarr reach SABnzbd at `sabnzbd` port `8080`. Radarr writes `/movies`, Sonarr writes `/tv`, and all three mount `/srv/data/downloads` at `/downloads`. Each app keeps its own config directory (`./plex`, `./radarr`, `./sonarr`, `./sabnzbd`).
-
 ## What each application does
 
 | Application | Role | Local web address |
@@ -293,3 +228,68 @@ This project does not host, provide, or link to any media. Plex, Radarr, Sonarr,
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Architecture
+
+![Animated request-to-playback flow. Steps light up in order: a Radarr or Sonarr request, an indexer search and the SABnzbd API, the Usenet download into /downloads, import into the movie and TV folders, a Plex library scan, and streaming to clients on port 32400.](docs/architecture-flow.gif)
+
+Numbered arrows follow a movie or episode from the request through download, import, and playback. Blue nodes are the Compose apps, green cylinders are shared host folders, and dashed orange nodes are outside this Compose file.
+
+<details>
+<summary>Static Mermaid version</summary>
+
+```mermaid
+flowchart LR
+  user{{"User<br/>external"}}
+  indexers{{"Indexers<br/>external"}}
+  usenet{{"Usenet provider<br/>external"}}
+
+  subgraph host ["Ubuntu host"]
+    direction LR
+    subgraph net ["Docker Compose network"]
+      direction TB
+      radarr("Radarr<br/>port 7878")
+      sonarr("Sonarr<br/>port 8989")
+      sabnzbd("SABnzbd<br/>port 8080")
+    end
+
+    subgraph storage ["Shared host folders"]
+      direction TB
+      movies[("Movies<br/>/mnt/media/movies/Media/Movies<br/>→ /movies")]
+      tv[("TV shows<br/>/mnt/media/tv/Media/TV Shows<br/>→ /tv")]
+      downloads[("Downloads<br/>/srv/data/downloads<br/>→ /downloads")]
+    end
+
+    plex("Plex<br/>host network<br/>port 32400")
+  end
+
+  clients{{"TV, phone, browser<br/>external"}}
+
+  user -->|"1) Request a movie"| radarr
+  user -->|"1) Request a show"| sonarr
+  radarr -->|"2) Search indexers"| indexers
+  sonarr -->|"2) Search indexers"| indexers
+  radarr -->|"2) Send NZB, sabnzbd:8080 API"| sabnzbd
+  sonarr -->|"2) Send NZB, sabnzbd:8080 API"| sabnzbd
+  usenet -->|"3) Download from Usenet"| sabnzbd
+  sabnzbd -->|"3) Write completed files to /downloads"| downloads
+  radarr -->|"4) Import from /downloads into /movies"| movies
+  sonarr -->|"4) Import from /downloads into /tv"| tv
+  movies -->|"5) Plex scans the read-only library"| plex
+  tv -->|"5) Plex scans the read-only library"| plex
+  plex -->|"6) Stream to clients on port 32400"| clients
+
+  classDef app fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a,stroke-width:2px
+  classDef folder fill:#dcfce7,stroke:#166534,color:#14532d,stroke-width:2px
+  classDef external fill:#ffedd5,stroke:#c2410c,color:#9a3412,stroke-width:2px,stroke-dasharray: 5 3
+  class radarr,sonarr,sabnzbd,plex app
+  class movies,tv,downloads folder
+  class user,indexers,usenet,clients external
+  style host fill:#f8fafc,stroke:#334155,stroke-width:2px
+  style net fill:#eff6ff,stroke:#2563eb
+  style storage fill:#f0fdf4,stroke:#16a34a
+```
+
+</details>
+
+Plex uses the host network (`network_mode: host`) and reads `/movies` and `/tv` read-only. Radarr, Sonarr, and SABnzbd share Docker's default Compose network, where Radarr and Sonarr reach SABnzbd at `sabnzbd` port `8080`. Radarr writes `/movies`, Sonarr writes `/tv`, and all three mount `/srv/data/downloads` at `/downloads`. Each app keeps its own config directory (`./plex`, `./radarr`, `./sonarr`, `./sabnzbd`).
