@@ -4,6 +4,39 @@ Build your own **self-hosted media server on Ubuntu** with **Plex, Radarr, Sonar
 
 > **Before you begin:** This is a documented working configuration, **not** a one-click installer. You must adapt storage paths, permissions, and application settings to your server. Portainer is installed separately on the original server and is not included in this Compose file.
 
+## Architecture
+
+Docker Compose runs Plex, Radarr, Sonarr, and SABnzbd on the Ubuntu host. Movies, TV, and downloads are shared host folders. Radarr and Sonarr send download jobs to SABnzbd on the Compose network. Plex uses the host network and reads the libraries after they are imported.
+
+```mermaid
+flowchart TB
+  subgraph host ["Ubuntu host"]
+    direction TB
+    subgraph compose ["Docker Compose"]
+      direction LR
+      sabnzbd["SABnzbd<br/>port 8080"]
+      radarr["Radarr<br/>port 7878"]
+      sonarr["Sonarr<br/>port 8989"]
+      plex["Plex<br/>host network, port 32400"]
+      radarr -.->|"download client, sabnzbd:8080"| sabnzbd
+      sonarr -.->|"download client, sabnzbd:8080"| sabnzbd
+    end
+
+    subgraph storage ["Shared host folders"]
+      direction LR
+      downloads[("Downloads<br/>/srv/data/downloads → /downloads<br/>SABnzbd writes<br/>Radarr and Sonarr read")]
+      movies[("Movies<br/>/mnt/media/movies/Media/Movies → /movies<br/>Radarr writes<br/>Plex reads, read-only")]
+      tv[("TV shows<br/>/mnt/media/tv/Media/TV Shows → /tv<br/>Sonarr writes<br/>Plex reads, read-only")]
+    end
+
+    sabnzbd ~~~ downloads
+    radarr ~~~ movies
+    sonarr ~~~ tv
+  end
+```
+
+Plex mounts `/movies` and `/tv` read-only. Radarr writes `/movies`, Sonarr writes `/tv`, and Radarr, Sonarr, and SABnzbd all mount `/srv/data/downloads` at `/downloads`. Each container also keeps its own config directory (`./plex`, `./radarr`, `./sonarr`, `./sabnzbd`).
+
 ## What each application does
 
 | Application | Role | Local web address |
