@@ -6,7 +6,12 @@ Build your own **self-hosted media server on Ubuntu** with **Plex, Radarr, Sonar
 
 ## Architecture
 
+![Animated request-to-playback flow. Steps light up in order: a Radarr or Sonarr request, an indexer search and the SABnzbd API, the Usenet download into /downloads, import into the movie and TV folders, a Plex library scan, and streaming to clients on port 32400.](docs/architecture-flow.gif)
+
 Numbered arrows follow a movie or episode from the request through download, import, and playback. Blue nodes are the Compose apps, green cylinders are shared host folders, and dashed orange nodes are outside this Compose file.
+
+<details>
+<summary>Static Mermaid version</summary>
 
 ```mermaid
 flowchart LR
@@ -59,6 +64,8 @@ flowchart LR
   style net fill:#eff6ff,stroke:#2563eb
   style storage fill:#f0fdf4,stroke:#16a34a
 ```
+
+</details>
 
 Plex uses the host network (`network_mode: host`) and reads `/movies` and `/tv` read-only. Radarr, Sonarr, and SABnzbd share Docker's default Compose network, where Radarr and Sonarr reach SABnzbd at `sabnzbd` port `8080`. Radarr writes `/movies`, Sonarr writes `/tv`, and all three mount `/srv/data/downloads` at `/downloads`. Each app keeps its own config directory (`./plex`, `./radarr`, `./sonarr`, `./sabnzbd`).
 
@@ -276,6 +283,12 @@ This public repository intentionally excludes personal media, application config
 The example does not configure hardware transcoding, external storage mounts, a firewall, remote access, VPN, indexers, or Portainer. Those require separate setup and verification.
 
 Use software and content in accordance with applicable laws and service terms.
+
+## Disclaimer
+
+This project is provided as-is for educational and personal home-lab use, with no warranty. The author and contributors are not responsible for how anyone uses it, or for any damages, data loss, or legal consequences. You are solely responsible for complying with copyright law, your Usenet provider's and indexers' terms, and the laws that apply to you. Only download and stream content you own or are legally allowed to use.
+
+This project does not host, provide, or link to any media. Plex, Radarr, Sonarr, and SABnzbd are third-party projects and are not affiliated with this repository.
 
 ## License
 
